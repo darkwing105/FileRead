@@ -26,8 +26,6 @@ import java.util.Objects;
         zis.close();
     }*/
 
-
-
 @SpringBootApplication
 public class LogFileAnalyser {
 
