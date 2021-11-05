@@ -7,7 +7,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Objects;
 
-//TODO : read zip files, access logs on remote server, traverse directoriy structure
+
 
 // Scratchpad
 //C:\Users\deonb\Downloads\ProdLogs\ZW-PROD-LOGS-poe-dc02-20211028
