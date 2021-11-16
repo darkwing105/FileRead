@@ -28,15 +28,17 @@ import java.util.Objects;
 @SpringBootApplication
 public class LogFileAnalyser {
 
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+
     public static void main(String[] args) {
         SpringApplication.run(LogFileAnalyser.class, args);
         try {
 
-            int nrOfRecordsFound = 0;
-
             /* List log files in the given directory */
             ArrayList<String> logFiles = new ArrayList<String>();
-            String pathToDir = "C:\\Users\\deonb\\Downloads\\ProdLogs\\KE_LOGS_ENGINE";
+            String pathToDir = "C:\\Users\\deonb\\Downloads\\ProdLogs\\ZW-PROD-LOGS-engine-dc02-20211028";
             //String pathToDir = "C:\\Users\\deonb\\Downloads\\ProdLogs\\ZW-PROD-LOGS-poe-dc02-20211028";
 
             /* Build a list of log  files from the given directory */
@@ -49,7 +51,7 @@ public class LogFileAnalyser {
                 System.out.println("The files in the directory : " + fileInDirectory);
 
                 boolean isZipFile = isArchive(fileInDirectory);
-                //System.out.println("Is it an archived file ? : " + file.getName() + " === " + isZipFile);
+                System.out.println("Is it an archived file ? : " + file.getName() + " === " + isZipFile);
 
                 // Extract the archive to the current directory
                 if(isZipFile) {
@@ -65,41 +67,61 @@ public class LogFileAnalyser {
 
                 BufferedReader in = new BufferedReader(new FileReader(pathToDir + "\\" + logFile));
 
-                //System.out.println("Records : " + in.readLine());
+                System.out.println("Records : " + in.readLine());
 
                 String str;
                 while ((str = in.readLine()) != null) {
+
+                    boolean layOutDiffer = false;
                     /* Find the log line record */
                     if (str.contains("NoOfRows[") && (str.contains("time["))) {
 
-                        //System.out.println("I have found a row " + str);
-                        nrOfRecordsFound++;
+                        System.out.println("I have found a row " + str);
 
-                        String[] data = str.split(" ");
-                        String date, time, ref, nioChannelRef;
-                        Integer rowCount, timeElapsed;
-                        date = data[0];
-                        time = data[1];
-                        ref = data[4];
-                        nioChannelRef = data[7];
-                        rowCount = Integer.parseInt(data[14].replaceAll("[a-zA-Z\\[\\]]", ""));
-                        timeElapsed = Integer.parseInt(data[16].replaceAll("[a-zA-Z\\[\\]\\.]", ""));
+                        if (str.contains("ComponentQueryService")) {
+                            layOutDiffer = true; //Zim logs has this type of query call, resulting in a different layout
+                        }
 
-                        if (timeElapsed >= 0) {
+                        try {
+                            String[] data = str.split(" ");
 
-                            //System.out.println(str);
-                            System.out.println("Date : " + date + " : time : " + time + " : reference : " + ref + " :Channel reference : " + nioChannelRef + " : Nr Rows : " + rowCount + " : Elapsed Time : " + timeElapsed / 1000 + " : seconds");
-                            //System.out.println("number of records analyzed : " + nrOfRecordsFound);
-                            try {
-                                FileWriter myWriter = new FileWriter("C:\\Users\\deonb\\Downloads\\ProdLogs\\KE_LOGS_ENGINE\\EngineKeniaLogs.txt", true);
-                                //myWriter.write("Date ; " + date + "; time ;" + time + " ; reference ; " + ref + " ; Channel reference ; " + nioChannelRef + " ; Nr Rows ; " + rowCount + " ; Elapsed Time ; " + timeElapsed / 1000 + " ; seconds" + "\n");
-                                myWriter.write(date.trim() + "\t"+ time.trim() + "\t" + ref.trim() + "\t" + nioChannelRef.trim() + "\t" + rowCount + "\t" + timeElapsed / 1000 + "\n");
-                                myWriter.close();
-                                //System.out.println("Successfully wrote to the file.");
-                            } catch (IOException e) {
-                                //System.out.println("An error occurred writing to the file.");
-                                e.printStackTrace();
+                            String date, time, ref, nioChannelRef;
+                            Integer rowCount, timeElapsed;
+
+                            //TODO build dynamic date extract for Kenia and Zim
+                            //date = data[0].substring(4); // -- Kenia logs !
+                            date = data[0]; // -- Zim logs !
+
+                            time = data[1].substring(0, 12);
+                            ref = data[4];
+                            nioChannelRef = data[7];
+
+
+                            if(layOutDiffer) {
+                                rowCount = Integer.parseInt(data[13].replaceAll("[a-zA-Z\\[\\]]", ""));
+                                timeElapsed = Integer.parseInt(data[15].replaceAll("[a-zA-Z\\[\\]\\.]", ""));
+                            } else {
+                                rowCount = Integer.parseInt(data[14].replaceAll("[a-zA-Z\\[\\]]", ""));
+                                timeElapsed = Integer.parseInt(data[16].replaceAll("[a-zA-Z\\[\\]\\.]", ""));
                             }
+
+                            if (timeElapsed >= 0) {
+
+                                System.out.println(str);
+                                System.out.println("Date : " + date + " : time : " + time + " : reference : " + ref + " :Channel reference : " + nioChannelRef + " : Nr Rows : " + rowCount + " : Elapsed Time : " + timeElapsed / 1000 + " : seconds");
+
+                                try {
+                                    FileWriter myWriter = new FileWriter("C:\\Users\\deonb\\Downloads\\ProdLogs\\ZW-PROD-LOGS-engine-dc02-20211028\\ZWEnginePRODdc02Logs.txt", true);
+                                    myWriter.write(date.trim() + "\t"+ time.trim() + "\t" + ref.trim() + "\t" + nioChannelRef.trim() + "\t" + rowCount + "\t" + timeElapsed / 1000 + "\n");
+                                    myWriter.close();
+                                    System.out.println(ANSI_BLUE + "Successfully wrote to the file." + ANSI_RESET);
+                                } catch (IOException e) {
+                                    System.out.println("An error occurred writing to the file.");
+                                    e.printStackTrace();
+                                }
+                            }
+                        } catch (Exception ex) {
+                            System.out.println("Exception splitting line" + ANSI_RED + ex + ANSI_RESET);
                         }
                     }
                 }
