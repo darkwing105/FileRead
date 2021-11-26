@@ -38,7 +38,8 @@ public class LogFileAnalyser {
 
             /* List log files in the given directory */
             ArrayList<String> logFiles = new ArrayList<String>();
-            String pathToDir = "C:\\Users\\deonb\\Downloads\\ProdLogs\\ZW-PROD-LOGS-engine-dc02-20211028";
+            String pathToDir = "C:\\Users\\deonb\\Downloads\\ProdLogs\\KE_ANdreLogs";
+            //String pathToDir = "C:\\Users\\deonb\\Downloads\\ProdLogs\\ZW-PROD-LOGS-engine-dc02-20211028";
             //String pathToDir = "C:\\Users\\deonb\\Downloads\\ProdLogs\\ZW-PROD-LOGS-poe-dc02-20211028";
 
             /* Build a list of log  files from the given directory */
@@ -77,7 +78,8 @@ public class LogFileAnalyser {
                     if (str.contains("NoOfRows[") && (str.contains("time["))) {
 
                         System.out.println("I have found a row " + str);
-
+                        //System.out.println("Index of NoOfRows " + str.indexOf("NoOfRows"));
+                        System.out.println("Extraction -- " + str.substring(str.indexOf("NoOfRows")));
                         if (str.contains("ComponentQueryService")) {
                             layOutDiffer = true; //Zim logs has this type of query call, resulting in a different layout
                         }
@@ -89,13 +91,20 @@ public class LogFileAnalyser {
                             Integer rowCount, timeElapsed;
 
                             //TODO build dynamic date extract for Kenia and Zim
-                            //date = data[0].substring(4); // -- Kenia logs !
-                            date = data[0]; // -- Zim logs !
+                            date = data[0].substring(4); // -- Kenia logs !""
+                            System.out.println("Date extracted : " + date);
+                            //date = data[0]; // -- Zim logs !
 
                             time = data[1].substring(0, 12);
+                            System.out.println("Time extracted " + time);
                             ref = data[4];
+                            System.out.println("Reference extracted :" + ref);
                             nioChannelRef = data[7];
-
+                            System.out.println("Extracted Nio " + nioChannelRef);
+                            System.out.println("13 " + data[13]);
+                            System.out.println("15 " + data[15]);
+                            System.out.println("14 " + data[14]);
+                            System.out.println("16 " + data[16]);
 
                             if(layOutDiffer) {
                                 rowCount = Integer.parseInt(data[13].replaceAll("[a-zA-Z\\[\\]]", ""));
@@ -111,7 +120,7 @@ public class LogFileAnalyser {
                                 System.out.println("Date : " + date + " : time : " + time + " : reference : " + ref + " :Channel reference : " + nioChannelRef + " : Nr Rows : " + rowCount + " : Elapsed Time : " + timeElapsed / 1000 + " : seconds");
 
                                 try {
-                                    FileWriter myWriter = new FileWriter("C:\\Users\\deonb\\Downloads\\ProdLogs\\ZW-PROD-LOGS-engine-dc02-20211028\\ZWEnginePRODdc02Logs.txt", true);
+                                    FileWriter myWriter = new FileWriter("C:\\Users\\deonb\\Downloads\\ProdLogs\\KE_ANdreLogs\\AndreLogs.txt", true);
                                     myWriter.write(date.trim() + "\t"+ time.trim() + "\t" + ref.trim() + "\t" + nioChannelRef.trim() + "\t" + rowCount + "\t" + timeElapsed / 1000 + "\n");
                                     myWriter.close();
                                     System.out.println(ANSI_BLUE + "Successfully wrote to the file." + ANSI_RESET);
